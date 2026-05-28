@@ -1,63 +1,75 @@
-const express = require("express");
-const cors = require("cors");
-const fetch = require("node-fetch");
+```js
+const fetch = require("node-fetch")
 
-const app = express();
+require("dotenv").config()
 
-app.use(cors());
-app.use(express.json());
+const express = require("express")
+const cors = require("cors")
 
-const OPENROUTER_KEY = "PUT_YOUR_KEY_HERE";
+const app = express()
+
+app.use(cors())
+app.use(express.json())
+
+app.get("/", (req, res) => {
+    res.send("AI server running")
+})
 
 app.post("/chat", async (req, res) => {
+
     try {
-        const message = req.body.message;
+
+        console.log("MESSAGE:", req.body.message)
 
         const response = await fetch(
             "https://openrouter.ai/api/v1/chat/completions",
             {
                 method: "POST",
+
                 headers: {
-                    "Authorization": `Bearer ${OPENROUTER_KEY}`,
+                    "Authorization":
+                        `Bearer ${process.env.OPENROUTER_KEY}`,
+
                     "Content-Type": "application/json"
                 },
+
                 body: JSON.stringify({
                     model: "deepseek/deepseek-v4-flash",
+
                     messages: [
                         {
-                            role: "system",
-                            content: "You are a Roblox NPC assistant."
-                        },
-                        {
                             role: "user",
-                            content: message
+                            content: req.body.message
                         }
                     ]
                 })
             }
-        );
+        )
 
-        const data = await response.json();
+        const data = await response.json()
 
-        console.log(data);
-
-        const reply =
-            data.choices?.[0]?.message?.content ||
-            "No response.";
+        console.log(data)
 
         res.json({
-            reply: reply
-        });
+            reply:
+                data.choices?.[0]?.message?.content
+                || "No AI response"
+        })
 
     } catch (err) {
-        console.log(err);
+
+        console.log(err)
 
         res.json({
-            reply: "Error."
-        });
-    }
-});
+            reply: "SERVER ERROR"
+        })
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
-});
+    }
+
+})
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})
